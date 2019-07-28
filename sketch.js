@@ -1,126 +1,98 @@
-const objects = [];
-const birds = [];
+let objects = [];
 let spacing = 40;
 let timer = spacing;
 let r = 1;
 let score = 0;
+const TOTAL = 500
+let players = [];
+let savedPlayers = [];
 
 
 function setup() {
-  createCanvas(600, 400);
+  createCanvas(800, 400);
 
-  player = new Player;
+  for (let i = 0; i < TOTAL; i++) {
+    players[i] = new Player;
+  }
+  
 
 }
-
-
-function keyPressed() {
-  if (keyCode === 38) {
-    player.jump();
-  }
-
-  if (keyCode === 40) {
-    player.duck()
-  }
-}
-
 
 
 function draw() {
   background(51);
-  
+
   timer--;
   if (timer <= 0) {
-    if (score % 5 === 0) {
-      spacing = random(30, 50);
-      timer = 0;
-      r = random(1);
-      if (score < 10) {
-        if (r < 0.025) {
-          birds.push(new Bird());
-          timer = spacing;
-        }
+    spacing = random(30, 50);
+    timer = 0;
+    r = random(1);
+    if (score < 10) {
+      if (r < 0.025) {
+        objects.push(new Obstacle());
+        timer = spacing;
       }
-      if (score >= 10 && score < 30) {
-        if (r < 0.15) {
-          birds.push(new Bird());
-          timer = spacing;
-        }
-      }
-      if (score >= 30) {
-        if (r < 0.2) {
-          birds.push(new Bird());
-          timer = spacing;
-        }
+    } else if (score >= 10) {
+      if (r < 0.15) {
+        objects.push(new Obstacle());
+        timer = spacing;
       }
 
-    } else {
-      spacing = random(30, 50);
-      timer = 0;
-      r = random(1);
-      if (score < 10) {
-        if (r < 0.025) {
-          objects.push(new Obstacle());
-          timer = spacing;
-        }
-      }
-      if (score >= 10 && score < 30) {
-        if (r < 0.15) {
-          objects.push(new Obstacle());
-          timer = spacing;
-        }
-      }
-      if (score >= 30) {
-        if (r < 0.2) {
-          objects.push(new Obstacle());
-          timer = spacing;
-        }
-      }
     }
   }
 
 
+  /*if (objects.length === 1 && objects[0].x < 2) {
+    objects.push(new Obstacle());
+  }*/
+
   for (i = 0; i < objects.length; i++) {
+    objects[i].speedUpdate();
     objects[i].show();
     objects[i].move();
-    if (collision(objects[i], player)) {
-      console.log('Game over');
-      noLoop();
+
+    for (let j = players.length - 1; j >= 0; j--) {
+
+      if(collision(objects[i], players[j])) {
+        savedPlayers.push(players.splice(j, 1)[0]);
+      }
+
     }
-    if (objects[i].x < -30) {
+
+
+    /* if (collision(objects[i], player)) {
+       console.log('Game over');
+       noLoop();
+     } */
+    
+    
+     if (objects[i].x < -30) {
       objects.splice(i, 1);
       score++
     };
   }
 
-  for (i = 0; i < birds.length; i++) {
-    birds[i].show();
-    birds[i].move();
-    if (collision(birds[i], player)) {
-      console.log('Game over');
-      noLoop();
-    }
-    if (birds[i].x < -30) {
-      birds.splice(i, 1);
-      score++
-    };
+  for (let player of players) {
+    player.show();
+    player.move();
+    player.think(objects);
   }
 
+  if (players.length === 0) {
+    nextGeneration();
+    objects = [];
+    score = 0;
+  }
 
-
-  player.show();
-  player.move();
   drawScore();
 }
 
 
-//change .r to .w and .h
-
 function collision(rect1, rect2) {
-  if (rect1.x < rect2.x + rect2.w &&
-    rect1.x + rect1.w > rect2.x &&
-    rect1.y < rect2.y + rect2.h + 15 &&
-    rect1.y + rect1.h > rect2.y) {
+  if (rect1.x < rect2.x + rect2.r &&
+    rect1.x + rect1.r > rect2.x &&
+    rect1.y < rect2.y + rect2.r + 15 &&
+    rect1.y + rect1.r > rect2.y) {
     return true;
   }
   return false;
@@ -129,5 +101,6 @@ function collision(rect1, rect2) {
 function drawScore() {
 
   text("Score: " + score, 8, 20);
+  text("Generation: " + generation, 8, 40);
 
 }
